@@ -18,29 +18,21 @@ public class HibernateConfig {
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
-        String dbHost = System.getenv("DB_HOST");
-        String dbPort = System.getenv("DB_PORT");
-        String dbName = System.getenv("DB_NAME");
-        String dbUser = System.getenv("DB_USER");
-        String dbPassword = System.getenv("DB_PASSWORD");
+        String databaseUrl = System.getenv("DATABASE_URL");
 
-        if (dbHost == null) dbHost = "localhost";
-        if (dbPort == null) dbPort = "3306";
-        if (dbName == null) dbName = "tallerwebi";
-        if (dbUser == null) dbUser = "user";
-        if (dbPassword == null) dbPassword = "user";
+        if (databaseUrl != null && databaseUrl.startsWith("postgres://")) {
+            // Render usa PostgreSQL
+            databaseUrl = databaseUrl.replace("postgres://", "jdbc:postgresql://");
+            dataSource.setUrl(databaseUrl);
+            dataSource.setDriverClassName("org.postgresql.Driver");
+        } else {
+            // Desarrollo local con HSQLDB
+            dataSource.setUrl("jdbc:hsqldb:mem:db_");
+            dataSource.setUsername("sa");
+            dataSource.setPassword("");
+            dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
+        }
 
-//        String url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true",
-//                                 dbHost, dbPort, dbName);
-
-//        dataSource.setUrl(url);
-        dataSource.setUsername("sa");
-        dataSource.setPassword("");
-        dataSource.setUrl("jdbc:hsqldb:mem:db_");
-        dataSource.setUsername(dbUser);
-        dataSource.setPassword(dbPassword);
-//        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
         return dataSource;
     }
 
@@ -60,11 +52,17 @@ public class HibernateConfig {
 
     private Properties hibernateProperties() {
         Properties properties = new Properties();
-//        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
-        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
+
+        String databaseUrl = System.getenv("DATABASE_URL");
+        if (databaseUrl != null && databaseUrl.contains("postgres")) {
+            properties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        } else {
+            properties.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
+        }
+
         properties.setProperty("hibernate.show_sql", "true");
         properties.setProperty("hibernate.format_sql", "true");
-        properties.setProperty("hibernate.hbm2ddl.auto", "create");
+        properties.setProperty("hibernate.hbm2ddl.auto", "update");
         properties.setProperty("hibernate.connection.characterEncoding", "utf8");
         properties.setProperty("hibernate.connection.CharSet", "utf8");
         properties.setProperty("hibernate.connection.useUnicode", "true");
