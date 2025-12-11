@@ -3,9 +3,12 @@
 # ===========================================
 
 # Etapa 1: Compilar el proyecto con Maven
-FROM maven:3.8.6-openjdk-11 AS builder
+FROM eclipse-temurin:11-jdk AS builder
 
 WORKDIR /app
+
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven && apt-get clean
 
 # Copiar archivos de Maven primero (para cachear dependencias)
 COPY pom.xml .
@@ -18,7 +21,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecutar con Jetty
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:11-jre
 
 # Definir variables de Jetty
 ENV JETTY_VERSION=9.4.56.v20240826
