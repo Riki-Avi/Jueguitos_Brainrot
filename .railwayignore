@@ -1,0 +1,8 @@
+# Ignorar archivos innecesarios para Railway
+.git
+.idea
+*.iml
+node_modules
+target
+.env
+*.md
